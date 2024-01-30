@@ -9,6 +9,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 	_ "github.com/mattn/go-sqlite3"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"git.neds.sh/matty/entain/racing/proto/racing"
 )
@@ -127,9 +128,17 @@ func (m *racesRepo) scanRaces(
 		}
 
 		race.AdvertisedStartTime = ts
+		race.Status = calculateStatus(race.AdvertisedStartTime)
 
 		races = append(races, &race)
 	}
 
 	return races, nil
+}
+
+func calculateStatus(AdvertisedStartTime *timestamppb.Timestamp) racing.Status {
+	if int32(time.Now().Compare(AdvertisedStartTime.AsTime())) > 0 {
+		return racing.Status_closed
+	}
+	return racing.Status_open
 }
